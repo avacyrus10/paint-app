@@ -12,49 +12,97 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedTool, onSelectTool }) => {
     event.dataTransfer.setData('toolType', tool);
   };
 
+  const renderShapeIcon = (tool: ToolType) => {
+    const size = 40;
+    const commonStyle: React.CSSProperties = {
+      width: size,
+      height: size,
+      marginBottom: '10px',
+      cursor: 'grab',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      border: selectedTool === tool ? '2px solid #007bff' : '1px solid #ccc',
+      backgroundColor: 'transparent'
+    };
+
+    if (tool === 'circle') {
+      return (
+        <div
+          draggable
+          onDragStart={(e) => handleDragStart(e, tool)}
+          onClick={() => onSelectTool(tool)}
+          style={{
+            ...commonStyle,
+            borderRadius: '50%',
+            backgroundColor: 'red'
+          }}
+        />
+      );
+    }
+
+    if (tool === 'square') {
+      return (
+        <div
+          draggable
+          onDragStart={(e) => handleDragStart(e, tool)}
+          onClick={() => onSelectTool(tool)}
+          style={{
+            ...commonStyle,
+            backgroundColor: 'green'
+          }}
+        />
+      );
+    }
+
+    if (tool === 'triangle') {
+      return (
+        <div
+          draggable
+          onDragStart={(e) => handleDragStart(e, tool)}
+          onClick={() => onSelectTool(tool)}
+          style={{
+            ...commonStyle,
+            border: selectedTool === tool ? '2px solid #007bff' : '1px solid transparent',
+            backgroundColor: 'transparent'
+          }}
+        >
+          <div style={{
+            width: 0,
+            height: 0,
+            borderLeft: '20px solid transparent',
+            borderRight: '20px solid transparent',
+            borderBottom: '35px solid blue'
+          }} />
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <aside style={styles.sidebar}>
-      <h3>Tools</h3>
-      {['circle', 'square', 'triangle'].map((tool) => (
-        <div
-          key={tool}
-          draggable
-          onDragStart={(e) => handleDragStart(e, tool as ToolType)}
-          style={getButtonStyle(selectedTool === tool)}
-          onClick={() => onSelectTool(tool as ToolType)}
-        >
-          {tool === 'circle' && '⭕ Circle'}
-          {tool === 'square' && '◼ Square'}
-          {tool === 'triangle' && '🔺 Triangle'}
-        </div>
-      ))}
+      {['circle', 'square', 'triangle'].map((tool) =>
+        <React.Fragment key={tool}>
+          {renderShapeIcon(tool as ToolType)}
+        </React.Fragment>
+      )}
     </aside>
   );
 };
 
 const styles = {
   sidebar: {
-    width: '150px',
+    width: '100px',
     padding: '10px',
     backgroundColor: '#f0f0f0',
     borderLeft: '1px solid #ccc',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px'
+    alignItems: 'center'
   }
 };
-
-function getButtonStyle(isSelected: boolean): React.CSSProperties {
-  return {
-    padding: '10px',
-    width: '100%',
-    backgroundColor: isSelected ? '#007bff' : '#fff',
-    color: isSelected ? '#fff' : '#000',
-    fontWeight: isSelected ? 'bold' : 'normal',
-    cursor: 'grab',
-    border: '1px solid #ccc'
-  };
-}
 
 export default Sidebar;
 
