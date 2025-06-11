@@ -49,22 +49,6 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
     };
   }, [draggingShapeId, setShapes]);
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (draggingShapeId !== null) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const newShape: Shape = {
-      id: Date.now(),
-      type: selectedTool,
-      x,
-      y
-    };
-
-    setShapes([...shapes, newShape]);
-  };
 
   const handleShapeMouseDown = (
     e: React.MouseEvent<HTMLDivElement>,
@@ -161,7 +145,6 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
     <div
       ref={canvasRef}
       style={styles.canvas}
-      onClick={handleCanvasClick}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
