@@ -20,7 +20,7 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
   const [draggingShapeId, setDraggingShapeId] = useState<number | null>(null);
   const offsetRef = useRef({ x: 0, y: 0 });
 
-
+  // Handle dragging inside canvas
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (draggingShapeId === null || !canvasRef.current) return;
@@ -49,7 +49,6 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
     };
   }, [draggingShapeId, setShapes]);
 
-
   const handleShapeMouseDown = (
     e: React.MouseEvent<HTMLDivElement>,
     shape: Shape
@@ -63,9 +62,12 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
     setDraggingShapeId(shape.id);
   };
 
+  const handleShapeDoubleClick = (shapeId: number) => {
+    setShapes(prev => prev.filter(shape => shape.id !== shapeId));
+  };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); 
+    e.preventDefault(); // Allow dropping
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -104,6 +106,7 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
           key={shape.id}
           style={{ ...style, borderRadius: '50%', backgroundColor: 'red' }}
           onMouseDown={(e) => handleShapeMouseDown(e, shape)}
+          onDoubleClick={() => handleShapeDoubleClick(shape.id)}
         />
       );
     }
@@ -114,6 +117,7 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
           key={shape.id}
           style={{ ...style, backgroundColor: 'green' }}
           onMouseDown={(e) => handleShapeMouseDown(e, shape)}
+          onDoubleClick={() => handleShapeDoubleClick(shape.id)}
         />
       );
     }
@@ -123,6 +127,7 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
         <div
           key={shape.id}
           onMouseDown={(e) => handleShapeMouseDown(e, shape)}
+          onDoubleClick={() => handleShapeDoubleClick(shape.id)}
           style={{
             position: 'absolute',
             left: shape.x,
