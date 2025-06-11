@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Canvas, { Shape } from './components/Canvas';
+import ShapeStatsBar from './components/ShapeStatsBar';
 
 const App: React.FC = () => {
   const [selectedTool, setSelectedTool] = useState<'circle' | 'square' | 'triangle'>('circle');
@@ -22,6 +23,7 @@ const App: React.FC = () => {
         />
         <Sidebar selectedTool={selectedTool} onSelectTool={setSelectedTool} />
       </div>
+      <ShapeStatsBar shapes={shapes} />
     </div>
   );
 };
@@ -29,7 +31,7 @@ const App: React.FC = () => {
 const styles = {
   main: {
     display: 'flex',
-    height: 'calc(100vh - 60px)'
+    height: 'calc(100vh - 140px)' 
   }
 };
 
