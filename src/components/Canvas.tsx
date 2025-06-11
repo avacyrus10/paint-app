@@ -171,4 +171,4 @@ const styles = {
 };
 
 export default Canvas;
-
+		
