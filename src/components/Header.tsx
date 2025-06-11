@@ -3,20 +3,22 @@ import { Shape } from './Canvas';
 
 interface HeaderProps {
   shapes: Shape[];
+  title: string;
+  onTitleChange: (newTitle: string) => void;
   onImport: (shapes: Shape[]) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ shapes, onImport }) => {
+const Header: React.FC<HeaderProps> = ({ shapes, title, onTitleChange, onImport }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
-    const data = JSON.stringify(shapes, null, 2);
+    const data = JSON.stringify({ title, shapes }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
 
     link.href = url;
-    link.download = 'drawing.json';
+    link.download = `${title || 'drawing'}.json`;
     link.click();
   };
 
@@ -28,16 +30,18 @@ const Header: React.FC<HeaderProps> = ({ shapes, onImport }) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
         try {
           const data = JSON.parse(reader.result as string);
-          if (Array.isArray(data)) {
-            onImport(data);
+          if (Array.isArray(data.shapes)) {
+            onTitleChange(data.title || 'Untitled');
+            onImport(data.shapes);
+          } else {
+            alert('Invalid shape data');
           }
-        } catch (err) {
+        } catch {
           alert('Invalid JSON file.');
         }
       };
@@ -47,7 +51,13 @@ const Header: React.FC<HeaderProps> = ({ shapes, onImport }) => {
 
   return (
     <header style={styles.header}>
-      <h1 style={styles.title}>Painting Title</h1>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => onTitleChange(e.target.value)}
+        style={styles.titleInput}
+        placeholder="Painting Title"
+      />
       <div style={styles.buttons}>
         <button onClick={handleImportClick}>Import</button>
         <button onClick={handleExport}>Export</button>
@@ -71,8 +81,13 @@ const styles = {
     backgroundColor: '#f5f5f5',
     borderBottom: '1px solid #ccc'
   },
-  title: {
-    margin: 0
+  titleInput: {
+    fontSize: '1.2rem',
+    flexGrow: 1,
+    marginRight: '10px',
+    padding: '5px',
+    border: '1px solid #ccc',
+    borderRadius: '4px'
   },
   buttons: {
     display: 'flex',

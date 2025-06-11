@@ -7,6 +7,7 @@ import ShapeStatsBar from './components/ShapeStatsBar';
 const App: React.FC = () => {
   const [selectedTool, setSelectedTool] = useState<'circle' | 'square' | 'triangle'>('circle');
   const [shapes, setShapes] = useState<Shape[]>([]);
+  const [title, setTitle] = useState<string>('');
 
   const handleImport = (newShapes: Shape[]) => {
     setShapes(newShapes);
@@ -14,14 +15,22 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <Header shapes={shapes} onImport={handleImport} />
+      <Header
+        shapes={shapes}
+        title={title}
+        onTitleChange={setTitle}
+        onImport={handleImport}
+      />
       <div style={styles.main}>
         <Canvas
           selectedTool={selectedTool}
           shapes={shapes}
           setShapes={setShapes}
         />
-        <Sidebar selectedTool={selectedTool} onSelectTool={setSelectedTool} />
+        <Sidebar
+          selectedTool={selectedTool}
+          onSelectTool={setSelectedTool}
+        />
       </div>
       <ShapeStatsBar shapes={shapes} />
     </div>
