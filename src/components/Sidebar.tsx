@@ -8,27 +8,26 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ selectedTool, onSelectTool }) => {
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, tool: ToolType) => {
+    event.dataTransfer.setData('toolType', tool);
+  };
+
   return (
     <aside style={styles.sidebar}>
       <h3>Tools</h3>
-      <button
-        onClick={() => onSelectTool('circle')}
-        style={getButtonStyle(selectedTool === 'circle')}
-      >
-        ⭕ Circle
-      </button>
-      <button
-        onClick={() => onSelectTool('square')}
-        style={getButtonStyle(selectedTool === 'square')}
-      >
-        ◼ Square
-      </button>
-      <button
-        onClick={() => onSelectTool('triangle')}
-        style={getButtonStyle(selectedTool === 'triangle')}
-      >
-        🔺 Triangle
-      </button>
+      {['circle', 'square', 'triangle'].map((tool) => (
+        <div
+          key={tool}
+          draggable
+          onDragStart={(e) => handleDragStart(e, tool as ToolType)}
+          style={getButtonStyle(selectedTool === tool)}
+          onClick={() => onSelectTool(tool as ToolType)}
+        >
+          {tool === 'circle' && '⭕ Circle'}
+          {tool === 'square' && '◼ Square'}
+          {tool === 'triangle' && '🔺 Triangle'}
+        </div>
+      ))}
     </aside>
   );
 };
@@ -38,29 +37,23 @@ const styles = {
     width: '150px',
     padding: '10px',
     backgroundColor: '#f0f0f0',
-    borderLeft: '1px solid #ccc'
+    borderLeft: '1px solid #ccc',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px'
   }
 };
 
 function getButtonStyle(isSelected: boolean): React.CSSProperties {
-  if (isSelected) {
-    return {
-      backgroundColor: '#007bff',
-      color: '#fff',
-      fontWeight: 'bold',
-      marginBottom: '10px',
-      padding: '10px',
-      width: '100%',
-    };
-  } else {
-    return {
-      backgroundColor: '#fff',
-      color: '#000',
-      marginBottom: '10px',
-      padding: '10px',
-      width: '100%',
-    };
-  }
+  return {
+    padding: '10px',
+    width: '100%',
+    backgroundColor: isSelected ? '#007bff' : '#fff',
+    color: isSelected ? '#fff' : '#000',
+    fontWeight: isSelected ? 'bold' : 'normal',
+    cursor: 'grab',
+    border: '1px solid #ccc'
+  };
 }
 
 export default Sidebar;

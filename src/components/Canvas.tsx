@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export type ToolType = 'circle' | 'square' | 'triangle';
 
@@ -16,11 +16,43 @@ interface CanvasProps {
 }
 
 const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
-  const [draggedId, setDraggedId] = useState<number | null>(null);
-  const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const [draggingShapeId, setDraggingShapeId] = useState<number | null>(null);
+  const offsetRef = useRef({ x: 0, y: 0 });
+
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (draggingShapeId === null || !canvasRef.current) return;
+
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left - offsetRef.current.x;
+      const y = e.clientY - rect.top - offsetRef.current.y;
+
+      setShapes(prev =>
+        prev.map(shape =>
+          shape.id === draggingShapeId ? { ...shape, x, y } : shape
+        )
+      );
+    };
+
+    const handleMouseUp = () => {
+      setDraggingShapeId(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingShapeId, setShapes]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    if (draggingShapeId !== null) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -34,37 +66,46 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
     setShapes([...shapes, newShape]);
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>, id: number) => {
+  const handleShapeMouseDown = (
+    e: React.MouseEvent<HTMLDivElement>,
+    shape: Shape
+  ) => {
     e.stopPropagation();
-    const shape = shapes.find(s => s.id === id);
-    if (shape) {
-      const offsetX = e.clientX - shape.x;
-      const offsetY = e.clientY - shape.y;
-      setOffset({ x: offsetX, y: offsetY });
-      setDraggedId(id);
-    }
+    const rect = canvasRef.current!.getBoundingClientRect();
+    offsetRef.current = {
+      x: e.clientX - rect.left - shape.x,
+      y: e.clientY - rect.top - shape.y
+    };
+    setDraggingShapeId(shape.id);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (draggedId !== null) {
-      const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-      const newX = e.clientX - rect.left - offset.x;
-      const newY = e.clientY - rect.top - offset.y;
 
-      setShapes(prev =>
-        prev.map(shape =>
-          shape.id === draggedId ? { ...shape, x: newX, y: newY } : shape
-        )
-      );
-    }
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault(); 
   };
 
-  const handleMouseUp = () => {
-    setDraggedId(null);
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+
+    const toolType = e.dataTransfer.getData('toolType') as ToolType;
+    if (!toolType) return;
+
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const newShape: Shape = {
+      id: Date.now(),
+      type: toolType,
+      x,
+      y
+    };
+
+    setShapes([...shapes, newShape]);
   };
 
   const renderShape = (shape: Shape) => {
-    const commonStyle: React.CSSProperties = {
+    const style: React.CSSProperties = {
       position: 'absolute',
       left: shape.x,
       top: shape.y,
@@ -77,8 +118,8 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
       return (
         <div
           key={shape.id}
-          onMouseDown={(e) => handleMouseDown(e, shape.id)}
-          style={{ ...commonStyle, borderRadius: '50%', backgroundColor: 'red' }}
+          style={{ ...style, borderRadius: '50%', backgroundColor: 'red' }}
+          onMouseDown={(e) => handleShapeMouseDown(e, shape)}
         />
       );
     }
@@ -87,8 +128,8 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
       return (
         <div
           key={shape.id}
-          onMouseDown={(e) => handleMouseDown(e, shape.id)}
-          style={{ ...commonStyle, backgroundColor: 'green' }}
+          style={{ ...style, backgroundColor: 'green' }}
+          onMouseDown={(e) => handleShapeMouseDown(e, shape)}
         />
       );
     }
@@ -97,7 +138,7 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
       return (
         <div
           key={shape.id}
-          onMouseDown={(e) => handleMouseDown(e, shape.id)}
+          onMouseDown={(e) => handleShapeMouseDown(e, shape)}
           style={{
             position: 'absolute',
             left: shape.x,
@@ -118,10 +159,11 @@ const Canvas: React.FC<CanvasProps> = ({ selectedTool, shapes, setShapes }) => {
 
   return (
     <div
+      ref={canvasRef}
       style={styles.canvas}
       onClick={handleCanvasClick}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       {shapes.map(renderShape)}
     </div>
@@ -135,7 +177,8 @@ const styles = {
     backgroundColor: '#fff',
     border: '2px dashed gray',
     margin: '20px',
-    height: '80vh'
+    height: '80vh',
+    overflow: 'hidden'
   }
 };
 
